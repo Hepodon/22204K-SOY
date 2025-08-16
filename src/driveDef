@@ -1,0 +1,20 @@
+#include "Custom/driveVoids.h"
+#include "main.h"
+#include "pros/abstract_motor.hpp"
+
+using namespace pros;
+// Niam = Not In A Match
+enum startingPos { Red_Left, Red_Right, Blue_Left, Blue_Right, NIAM };
+
+MotorGroup intake({19, -18}, pros::v5::MotorGears::rpm_200,
+                  pros::v5::MotorUnits::degrees);
+
+void toggleIntake(Direction dih) {
+  if (dih == In) {
+    intake.move(127);
+  } else if (dih == Out) {
+    intake.move(-127);
+  } else if (dih == Stop) {
+    intake.brake();
+  }
+}
