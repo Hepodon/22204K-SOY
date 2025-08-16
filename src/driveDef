@@ -1,13 +1,45 @@
 #include "Custom/driveVoids.h"
+#include "Custom/portDef.hpp"
 #include "main.h"
 #include "pros/abstract_motor.hpp"
+#include "pros/misc.h"
 
 using namespace pros;
-// Niam = Not In A Match
-enum startingPos { Red_Left, Red_Right, Blue_Left, Blue_Right, NIAM };
 
-MotorGroup intake({19, -18}, pros::v5::MotorGears::rpm_200,
-                  pros::v5::MotorUnits::degrees);
+float applySlew(int current, int target, float rate) {
+  int diff = target - current;
+  if (abs(diff) > rate)
+    return current + rate * (diff > 0 ? 1 : -1);
+  return target;
+}
+
+void intakeControl(void *) {
+  int inputIntake = 0;
+  while (true) {
+    if (userInput.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
+      if (inputIntake == 1) {
+        toggleIntake(Stop);
+        inputIntake = 0;
+      } else {
+        toggleIntake(In);
+        inputIntake = 1;
+      }
+    } else if (userInput.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
+      if (inputIntake == 2) {
+        toggleIntake(Stop);
+        inputIntake = 0;
+      } else {
+        toggleIntake(Out);
+        inputIntake = 2;
+      }
+    }
+    delay(20);
+  }
+}
+
+// Niam = Not In A Match
+
+enum startingPos { Red_Left, Red_Right, Blue_Left, Blue_Right, NIAM };
 
 void toggleIntake(Direction dih) {
   if (dih == In) {
