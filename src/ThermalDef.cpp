@@ -1,4 +1,10 @@
 #include "Custom/Thermal.hpp"
+#include "Custom/portDef.hpp"
+#include "liblvgl/core/lv_obj.h"
+#include "liblvgl/core/lv_obj_style.h"
+#include "liblvgl/lv_conf_internal.h"
+#include "liblvgl/misc/lv_color.h"
+#include "liblvgl/widgets/arc/lv_arc.h"
 #include "pros/apix.h"
 #include "pros/motors.hpp"
 #include "pros/rtos.hpp"
@@ -8,8 +14,8 @@
 
 constexpr int PORT_M1 = 1;
 constexpr int PORT_M2 = 2;
-constexpr int PORT_M3 = 3;
-constexpr int PORT_M4 = 4;
+constexpr int PORT_M3 = 11;
+constexpr int PORT_M4 = 12;
 
 constexpr double LVL2_C = 45.0;
 constexpr double LVL3_C = 55.0;
@@ -67,7 +73,7 @@ static lv_color_t level_color(int lvl) {
 static void create_motor_slot(MotorUI &slot, const char *title,
                               lv_align_t align, int x_ofs, int y_ofs) {
   lv_obj_t *cont = lv_obj_create(g_screen);
-  lv_obj_set_size(cont, 180, 140);
+  lv_obj_set_size(cont, 135, 105);
   lv_obj_set_style_pad_all(cont, 6, 0);
   lv_obj_set_style_radius(cont, 16, 0);
   lv_obj_set_style_bg_opa(cont, LV_OPA_20, 0);
@@ -81,7 +87,7 @@ static void create_motor_slot(MotorUI &slot, const char *title,
 
   // 180° Arc
   slot.arc = lv_arc_create(cont);
-  lv_obj_set_size(slot.arc, 120, 120);
+  lv_obj_set_size(slot.arc, 70, 60);
   lv_obj_align(slot.arc, LV_ALIGN_TOP_RIGHT, -8, 8);
   lv_arc_set_rotation(slot.arc, 180);     // Rotate so half arc sits nicely
   lv_arc_set_bg_angles(slot.arc, 0, 180); // background half
@@ -94,12 +100,17 @@ static void create_motor_slot(MotorUI &slot, const char *title,
   lv_obj_set_style_arc_width(slot.arc, 14, LV_PART_MAIN);
   lv_obj_set_style_arc_color(slot.arc, lv_color_hex(0x374151),
                              LV_PART_MAIN); // muted bg
+  lv_color_t col = level_color(1);
+  lv_obj_set_style_arc_color(slot.arc, col, LV_PART_KNOB);
 
-  // Kelvin readout (big)
+  lv_obj_set_style_size(slot.arc, 1, 1, LV_PART_KNOB);
+  // 11.32
+  //  Kelvin readout (big)
   slot.label_temp = lv_label_create(cont);
-  lv_obj_set_style_text_font(slot.label_temp, &lv_font_montserrat_20, 0);
+  lv_obj_set_style_text_font(slot.label_temp, &lv_font_montserrat_12, 0);
   lv_label_set_text(slot.label_temp, "--.- K");
-  lv_obj_align(slot.label_temp, LV_ALIGN_BOTTOM_LEFT, 6, -26);
+  lv_obj_align(slot.label_temp, LV_ALIGN_BOTTOM_LEFT, 6, -30);
+  lv_obj_set_size(slot.label_temp, 70, 12);
 
   // Level label
   slot.label_level = lv_label_create(cont);
@@ -162,11 +173,11 @@ static void build_ui() {
   create_motor_slot(g_ui[0], make_title("M1", PORT_M1).c_str(),
                     LV_ALIGN_TOP_LEFT, 6, 6);
   create_motor_slot(g_ui[1], make_title("M2", PORT_M2).c_str(),
-                    LV_ALIGN_TOP_RIGHT, -6, 6);
+                    LV_ALIGN_TOP_MID, -6, 6);
   create_motor_slot(g_ui[2], make_title("M3", PORT_M3).c_str(),
                     LV_ALIGN_BOTTOM_LEFT, 6, -6);
   create_motor_slot(g_ui[3], make_title("M4", PORT_M4).c_str(),
-                    LV_ALIGN_BOTTOM_RIGHT, -6, -6);
+                    LV_ALIGN_BOTTOM_MID, -6, -6);
 
   lv_screen_load(g_screen);
 

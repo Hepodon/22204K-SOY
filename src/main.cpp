@@ -4,10 +4,9 @@
 #include "Custom/portDef.hpp"
 #include "ThermalDef.cpp"
 #include "pros/rtos.h"
-
 void initialize() {
-  c::task_create(intakeControl, NULL, 1, TASK_STACK_DEPTH_DEFAULT,
-                 "Intake Control Task");
+  userInput.clear();
+  pros::Task INTAKETASK(intakeControl);
   build_ui();
 }
 
@@ -22,15 +21,15 @@ void opcontrol() {
   float driveValue = 0;
   float turnValue = 0;
 
-  const float driveSlewRate = 8;
-  const float turnSlewRate = 16;
+  const float driveSlewRate = 6;
+  const float turnSlewRate = 12;
 
   int leftPower = 0;
   int rightPower = 0;
 
   while (true) {
     float rawDrive = userInput.get_analog(E_CONTROLLER_ANALOG_LEFT_Y);
-    float rawTurn = userInput.get_analog(E_CONTROLLER_ANALOG_RIGHT_X);
+    float rawTurn = userInput.get_analog(E_CONTROLLER_ANALOG_RIGHT_X) * 0.6;
 
     driveValue = applySlew(driveValue, rawDrive, driveSlewRate);
     turnValue = applySlew(turnValue, rawTurn, turnSlewRate);
