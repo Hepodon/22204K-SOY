@@ -1,10 +1,14 @@
 #include "main.h"
-#include "Custom/driveVoids.h"
+#include "Custom/Thermal.hpp"
+#include "Custom/driveVoids.hpp"
 #include "Custom/portDef.hpp"
+#include "ThermalDef.cpp"
 #include "pros/rtos.h"
+
 void initialize() {
   c::task_create(intakeControl, NULL, 1, TASK_STACK_DEPTH_DEFAULT,
                  "Intake Control Task");
+  build_ui();
 }
 
 void disabled() {}
