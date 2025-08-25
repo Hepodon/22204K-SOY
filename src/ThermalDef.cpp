@@ -60,13 +60,13 @@ static int temp_to_level(double c) {
 static lv_color_t level_color(int lvl) {
   switch (lvl) {
   case 1:
-    return lv_color_hex(0x2ecc71); // green
+    return lv_color_hex(0x2ecc71);
   case 2:
-    return lv_color_hex(0xf1c40f); // yellow
+    return lv_color_hex(0xf1c40f);
   case 3:
-    return lv_color_hex(0xe67e22); // orange
+    return lv_color_hex(0xe67e22);
   default:
-    return lv_color_hex(0xe74c3c); // red
+    return lv_color_hex(0xe74c3c);
   }
 }
 
@@ -80,71 +80,56 @@ static void create_motor_slot(MotorUI &slot, const char *title,
   lv_obj_set_style_bg_color(cont, lv_color_hex(0x1F2937), 0);
   lv_obj_align(cont, align, x_ofs, y_ofs);
 
-  // Title
   slot.label_title = lv_label_create(cont);
   lv_label_set_text(slot.label_title, title);
   lv_obj_align(slot.label_title, LV_ALIGN_TOP_LEFT, 4, 2);
 
-  // 180° Arc
   slot.arc = lv_arc_create(cont);
   lv_obj_set_size(slot.arc, 70, 60);
   lv_obj_align(slot.arc, LV_ALIGN_TOP_RIGHT, -8, 8);
-  lv_arc_set_rotation(slot.arc, 180);     // Rotate so half arc sits nicely
-  lv_arc_set_bg_angles(slot.arc, 0, 180); // background half
+  lv_arc_set_rotation(slot.arc, 180);
+  lv_arc_set_bg_angles(slot.arc, 0, 180);
   lv_arc_set_range(slot.arc, (int)ARC_MIN_K, (int)ARC_MAX_K);
   lv_arc_set_value(slot.arc, (int)ARC_MIN_K);
-  lv_obj_remove_flag(slot.arc, LV_OBJ_FLAG_CLICKABLE); // display only
+  lv_obj_remove_flag(slot.arc, LV_OBJ_FLAG_CLICKABLE);
 
-  // Style the indicator
   lv_obj_set_style_arc_width(slot.arc, 14, LV_PART_INDICATOR);
   lv_obj_set_style_arc_width(slot.arc, 14, LV_PART_MAIN);
-  lv_obj_set_style_arc_color(slot.arc, lv_color_hex(0x374151),
-                             LV_PART_MAIN); // muted bg
+  lv_obj_set_style_arc_color(slot.arc, lv_color_hex(0x374151), LV_PART_MAIN);
   lv_color_t col = level_color(1);
   lv_obj_set_style_arc_color(slot.arc, col, LV_PART_KNOB);
 
   lv_obj_set_style_size(slot.arc, 1, 1, LV_PART_KNOB);
-  // 11.32
-  //  Kelvin readout (big)
+
   slot.label_temp = lv_label_create(cont);
   lv_obj_set_style_text_font(slot.label_temp, &lv_font_montserrat_12, 0);
   lv_label_set_text(slot.label_temp, "--.- K");
   lv_obj_align(slot.label_temp, LV_ALIGN_BOTTOM_LEFT, 6, -30);
   lv_obj_set_size(slot.label_temp, 70, 12);
 
-  // Level label
   slot.label_level = lv_label_create(cont);
   lv_label_set_text(slot.label_level, "Level: -/4");
   lv_obj_align(slot.label_level, LV_ALIGN_BOTTOM_LEFT, 6, -4);
 }
 
-/** Generate the text "Mx (Port N)" */
 static std::string make_title(const char *name, int port) {
   return std::string(name) + " (Port " + std::to_string(std::abs(port)) + ")";
 }
 
-/** Timer callback: poll motors and refresh UI */
 static void ui_timer_cb(lv_timer_t * /*t*/) {
   for (size_t i = 0; i < g_ui.size(); ++i) {
     auto &m = g_ui[i];
 
-    // If a motor is physically missing or disconnected, PROS returns NAN
-    // sometimes; handle gracefully.
-    double celsius = m.motor.get_temperature(); // °C (double)
+    double celsius = m.motor.get_temperature();
     bool ok = std::isfinite(celsius);
     double kelvin = ok ? c_to_k(celsius) : NAN;
 
-    // Compute level and arc color
     int lvl = ok ? temp_to_level(celsius) : 0;
-    lv_color_t col = level_color(
-        lvl == 0 ? 4 : lvl); // if unknown, show red to draw attention
-
-    // Update arc value within range
+    lv_color_t col = level_color(lvl == 0 ? 4 : lvl);
     double k_for_arc = ok ? clamp(kelvin, ARC_MIN_K, ARC_MAX_K) : ARC_MIN_K;
     lv_arc_set_value(m.arc, static_cast<int>(std::round(k_for_arc)));
     lv_obj_set_style_arc_color(m.arc, col, LV_PART_INDICATOR);
 
-    // Update labels
     if (ok) {
       char buf[48];
       std::snprintf(buf, sizeof(buf), "%.1f K", kelvin);
@@ -169,7 +154,6 @@ static void build_ui() {
   lv_obj_set_style_bg_color(g_screen, lv_color_hex(0x0B1220), 0);
   lv_obj_set_style_bg_opa(g_screen, LV_OPA_COVER, 0);
 
-  // Create the 4 corners
   create_motor_slot(g_ui[0], make_title("M1", PORT_M1).c_str(),
                     LV_ALIGN_TOP_LEFT, 6, 6);
   create_motor_slot(g_ui[1], make_title("M2", PORT_M2).c_str(),
@@ -181,6 +165,5 @@ static void build_ui() {
 
   lv_screen_load(g_screen);
 
-  // Start periodic updates
   lv_timer_create(ui_timer_cb, UI_UPDATE_MS, nullptr);
 }
