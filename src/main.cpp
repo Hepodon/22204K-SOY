@@ -4,9 +4,12 @@
 #include "Custom/portDef.hpp"
 #include "ThermalDef.cpp"
 #include "pros/rtos.h"
+
+using namespace pros;
+
 void initialize() {
-  userInput.clear();
-  pros::Task INTAKETASK(intakeControl);
+  Task INTAKETASK(intakeControl);
+  Task MIDCHAINTASK(middleControl);
   build_ui();
 }
 
@@ -17,7 +20,6 @@ void competition_initialize() {}
 void autonomous() {}
 
 void opcontrol() {
-
   float driveValue = 0;
   float turnValue = 0;
 
